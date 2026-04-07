@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Corso PV">
+<meta name="theme-color" content="#0f1923">
+<title>Corso Genitori · Agostino</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0f1923;
+  --bg2: #172030;
+  --bg3: #1e2d40;
+  --card: #1a2840;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eef4;
+  --muted: #7a92a8;
+  --dim: #4a6070;
+  --teal: #2dd4bf;
+  --teal-dim: rgba(45,212,191,0.12);
+  --teal-mid: rgba(45,212,191,0.25);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.12);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.12);
+  --r: 14px;
+  --r-sm: 8px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: calc(70px + var(--safe-bottom));
+}
+
+.topbar {
+  background: var(--bg);
+  padding: calc(var(--safe-top) + 14px) 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-title { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+.topbar-sub { font-size: 11px; color: var(--muted); margin-top: 1px; font-family: 'DM Mono', monospace; }
+
+.clock-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--teal);
+  background: var(--teal-dim);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(45,212,191,0.2);
+}
+
+.content { padding: 16px; display: none; }
+.content.active { display: block; }
+
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin: 20px 0 10px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.card-tap {
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  -webkit-touch-callout: none;
+}
+.card-tap:active { background: var(--bg3); border-color: var(--border2); }
+
+.row { display: flex; align-items: flex-start; gap: 10px; }
+.row-center { display: flex; align-items: center; gap: 10px; }
+
+.check {
+  width: 22px; height: 22px; min-width: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 1px;
+}
+.check.done { background: var(--green-dim); border-color: var(--green); }
+.check.done::after {
+  content: '';
+  display: block;
+  width: 5px; height: 9px;
+  border: 2px solid var(--green);
+  border-top: none; border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.prio { width: 6px; height: 6px; min-width: 6px; border-radius: 50%; margin-top: 8px; }
+.p-a { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.p-m { background: var(--amber); }
+.p-b { background: var(--green); }
+
+.task-title { font-size: 14px; font-weight: 500; line-height: 1.35; }
+.task-title.done { text-decoration: line-through; color: var(--dim); }
+.task-meta { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
+
+.expand-body { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.expand-body.open { display: block; }
+.expand-note { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+
+.btn-ask {
+  width: 100%;
+  background: var(--teal-dim);
+  border: 1px solid rgba(45,212,191,0.3);
+  color: var(--teal);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s;
+}
+.btn-ask:active { background: var(--teal-mid); }
+
+.btn-primary {
+  background: var(--teal);
+  color: #0f1923;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 13px;
+  border-radius: var(--r);
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.12s;
+}
+.btn-primary:active { opacity: 0.85; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.btn-outline:active { background: var(--bg3); }
+
+.prog-track {
+  background: var(--bg3);
+  border-radius: 4px;
+  height: 5px;
+  margin: 6px 0 4px;
+}
+.prog-fill {
+  height: 5px;
+  border-radius: 4px;
+  background: var(--teal);
+  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-num { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--teal); }
+.stat-lbl { font-size: 10px; color: var(--dim); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.week-row { display: flex; gap: 6px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 2px; }
+.day-chip {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px solid var(--border);
+  min-width: 42px; cursor: pointer;
+  transition: all 0.15s;
+}
+.day-chip.today { border-color: var(--teal); background: var(--teal-dim); }
+.dc-d { font-size: 10px; color: var(--dim); }
+.dc-n { font-size: 15px; font-weight: 600; margin: 2px 0; }
+.day-chip.today .dc-d, .day-chip.today .dc-n { color: var(--teal); }
+.dc-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--amber); }
+
+.claude-strip {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.claude-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  color: var(--teal); text-transform: uppercase;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.claude-label::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--teal);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(0.85)} }
+
+.qbtn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 6px;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: background 0.12s;
+}
+.qbtn:active { background: var(--card); }
+.qbtn-arrow { color: var(--teal); font-size: 14px; }
+
+.contact-avatar {
+  width: 40px; height: 40px; min-width: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace;
+}
+.av-teal { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(45,212,191,0.3); }
+.av-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
+.av-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+.av-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+
+.contact-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.contact-role { font-size: 11px; color: var(--muted); }
+
+.info-row {
+  display: flex; justify-content: space-between;
+  padding: 7px 0; border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.info-label { color: var(--dim); }
+.info-val { color: var(--muted); text-align: right; }
+.info-val a { color: var(--teal); text-decoration: none; }
+
+.prio-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.pb-alta { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+.pb-media { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+.pb-bassa { background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+
+.log-entry {
+  display: flex; gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.log-dot {
+  width: 8px; height: 8px; min-width: 8px; border-radius: 50%;
+  margin-top: 5px;
+}
+.log-teal { background: var(--teal); }
+.log-amber { background: var(--amber); }
+.log-green { background: var(--green); }
+.log-body { flex: 1; }
+.log-date { font-size: 10px; color: var(--dim); font-family: 'DM Mono', monospace; margin-bottom: 3px; }
+.log-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+.note-area {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 12px;
+  resize: none;
+  height: 80px;
+  outline: none;
+}
+.note-area:focus { border-color: var(--teal); }
+.note-area::placeholder { color: var(--dim); }
+
+.note-btns { display: flex; gap: 8px; margin-top: 8px; }
+
+.week-badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+}
+.wb-s1 { background: var(--red-dim); color: var(--red); }
+.wb-s2 { background: var(--blue-dim); color: var(--blue); }
+.wb-s3 { background: rgba(167,139,250,0.12); color: #a78bfa; }
+.wb-s4 { background: var(--green-dim); color: var(--green); }
+
+.plan-item {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex; align-items: center; gap: 12px;
+}
+.plan-item:active { background: var(--bg3); }
+.plan-num {
+  width: 36px; height: 36px; min-width: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace;
+}
+.pn-s1 { background: var(--red-dim); color: var(--red); }
+.pn-s2 { background: var(--blue-dim); color: var(--blue); }
+.pn-s3 { background: rgba(167,139,250,0.12); color: #a78bfa; }
+.pn-s4 { background: var(--green-dim); color: var(--green); }
+.plan-info { flex: 1; }
+.plan-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.plan-date { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.plan-arrow { color: var(--dim); font-size: 16px; }
+
+.bottomnav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding: 0 8px calc(var(--safe-bottom) + 4px);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 200;
+}
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; padding: 10px 4px 6px;
+  cursor: pointer; transition: opacity 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav-icon {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 3px;
+}
+.bnav-label { font-size: 10px; color: var(--dim); font-weight: 500; }
+.bnav-item.active .bnav-label { color: var(--teal); }
+.bnav-item.active .bnav-icon svg { stroke: var(--teal); }
+.bnav-item .bnav-icon svg { stroke: var(--dim); transition: stroke 0.12s; }
+
+.install-banner {
+  background: var(--teal-dim);
+  border: 1px solid rgba(45,212,191,0.3);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.install-title { font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 4px; }
+.install-steps { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.install-steps b { color: var(--text); }
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+.tag {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  font-family: 'DM Mono', monospace;
+}
+.tag-urgente { background: var(--red-dim); color: var(--red); }
+.tag-oggi { background: var(--amber-dim); color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Corso Genitori PV</div>
+    <div class="topbar-sub" id="topbar-week">Settimana 1 · 13–19 apr</div>
+  </div>
+  <div class="clock-badge" id="clock">--:--</div>
+</div>
+
+<!-- ═══ OGGI ═══ -->
+<div class="content active" id="screen-oggi">
+
+  <div class="section-label" style="margin-top:16px">Settimana 1 · La settimana del contatto</div>
+
+  <div class="week-row">
+    <div class="day-chip today"><div class="dc-d">dom</div><div class="dc-n">13</div></div>
+    <div class="day-chip"><div class="dc-d">lun</div><div class="dc-n">14</div><div class="dc-dot"></div></div>
+    <div class="day-chip"><div class="dc-d">mar</div><div class="dc-n">15</div><div class="dc-dot"></div></div>
+    <div class="day-chip"><div class="dc-d">mer</div><div class="dc-n">16</div><div class="dc-dot"></div></div>
+    <div class="day-chip"><div class="dc-d">gio</div><div class="dc-n">17</div></div>
+    <div class="day-chip"><div class="dc-d">ven</div><div class="dc-n">18</div></div>
+    <div class="day-chip"><div class="dc-d">sab</div><div class="dc-n">19</div></div>
+  </div>
+
+  <div class="claude-strip">
+    <div class="claude-label">Claude · consulente sempre attivo</div>
+    <button class="qbtn" onclick="askClaude('Sono Agostino, sono al 13 aprile, primo giorno del piano per il corso genitori-adolescenti a Pavia. Cosa faccio CONCRETAMENTE oggi come prima azione?')">Cosa faccio adesso? <span class="qbtn-arrow">↗</span></button>
+    <button class="qbtn" onclick="askClaude('Ho un aggiornamento sul corso genitori a Pavia. Fammi 3 domande per capire dove sono e cosa fare dopo.')">Ho un aggiornamento... <span class="qbtn-arrow">↗</span></button>
+    <button class="qbtn" style="margin-bottom:0" onclick="askClaude('Sono bloccato su un passaggio del piano per il corso genitori-adolescenti a Pavia. Aiutami a sbloccarmi e dimmi il prossimo passo più semplice.')">Sono bloccato <span class="qbtn-arrow">↗</span></button>
+  </div>
+
+  <div class="section-label">Da completare questa settimana</div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" id="s-tot">4</div><div class="stat-lbl">azioni</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-done">0</div><div class="stat-lbl">fatte</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-pct">0%</div><div class="stat-lbl">avanzam.</div></div>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+
+  <div class="card card-tap" onclick="toggleExp('e1')">
+    <div class="row">
+      <div class="prio p-a"></div>
+      <div class="check" id="c1" onclick="event.stopPropagation();tick('t1','c1','l1')"></div>
+      <div style="flex:1">
+        <div class="task-title" id="l1">Email a Fondazione Adolescere</div>
+        <div class="task-meta">cpf@adolescere.org · entro lun 14</div>
+      </div>
+      <span class="tag tag-urgente">Alta</span>
+    </div>
+    <div class="expand-body" id="e1">
+      <div class="expand-note">Oggetto: "Proposta collaborazione — corso genitori adolescenti". 5 righe: chi sei, cosa hai costruito, cosa proponi. Tu porti contenuto + formatore, loro portano ETS + rete + bando. Chiedi un appuntamento telefonico. Destinataria: Dott.ssa Benedetta Lombardini.</div>
+      <button class="btn-ask" onclick="askClaude('Scrivimi la bozza completa dell\'email per Fondazione Adolescere di Voghera per proporre la partnership sul corso genitori-adolescenti a Pavia. Tono professionale ma diretto.')">Scrivimi la bozza email ↗</button>
+    </div>
+  </div>
+
+  <div class="card card-tap" onclick="toggleExp('e2')">
+    <div class="row">
+      <div class="prio p-a"></div>
+      <div class="check" id="c2" onclick="event.stopPropagation();tick('t2','c2','l2')"></div>
+      <div style="flex:1">
+        <div class="task-title" id="l2">Chiama ACLI Pavia</div>
+        <div class="task-meta">0382/29638 · lun mattina</div>
+      </div>
+      <span class="tag tag-urgente">Alta</span>
+    </div>
+    <div class="expand-body" id="e2">
+      <div class="expand-note">Chiedi del responsabile progetto famiglie. Già finanziati da Cariplo e Vismara — sono il partner ideale per il bando. Proposta: tu il programma, loro ETS + rete + accreditamento.</div>
+      <button class="btn-ask" onclick="askClaude('Scrivimi il copione della telefonata ad ACLI Pavia per proporre la partnership sul corso genitori-adolescenti. Voglio essere diretto, non commerciale.')">Copione telefonata ↗</button>
+    </div>
+  </div>
+
+  <div class="card card-tap" onclick="toggleExp('e3')">
+    <div class="row">
+      <div class="prio p-a"></div>
+      <div class="check" id="c3" onclick="event.stopPropagation();tick('t3','c3','l3')"></div>
+      <div style="flex:1">
+        <div class="task-title" id="l3">Leggi bandi 2026 Fondazione Pavia</div>
+        <div class="task-meta">fondazionepv.it/bandi · oggi</div>
+      </div>
+      <span class="tag tag-urgente">Alta</span>
+    </div>
+    <div class="expand-body" id="e3">
+      <div class="expand-note">Aperti 1°, 2°, 3° e 4° bando 2026. Budget totale 610.400€. Cerca settori: servizi alla persona, disagio psicologico, genitorialità. Annota scadenze.</div>
+      <button class="btn-ask" onclick="askClaude('Cosa devo cercare nei bandi 2026 della Fondazione della Comunità Pavia per capire se il corso genitori-adolescenti è ammissibile? Quali criteri valutano?')">Cosa cercare nel bando ↗</button>
+    </div>
+  </div>
+
+  <div class="card card-tap" onclick="toggleExp('e4')">
+    <div class="row">
+      <div class="prio p-m"></div>
+      <div class="check" id="c4" onclick="event.stopPropagation();tick('t4','c4','l4')"></div>
+      <div style="flex:1">
+        <div class="task-title" id="l4">Contatta Consorzio Sociale Pavese</div>
+        <div class="task-meta">339 715 1351 · mercoledì 10-13</div>
+      </div>
+      <span class="tag tag-oggi">Media</span>
+    </div>
+    <div class="expand-body" id="e4">
+      <div class="expand-note">Piazzale Crosione 10/B, Pavia. Proponi di inserire il ciclo gratuito nel calendario del Centro per la Famiglia. Nessun bando richiesto — decisione operativa.</div>
+      <button class="btn-ask" onclick="askClaude('Come propongo il corso genitori-adolescenti al Consorzio Sociale Pavese senza un bando? Cosa offro in cambio della sede e della visibilità?')">Come propormi senza bando ↗</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ PIANO ═══ -->
+<div class="content" id="screen-piano">
+
+  <div class="section-label" style="margin-top:16px">13 aprile – 6 giugno</div>
+
+  <div class="plan-item card-tap" onclick="askClaude('Dettagliami giorno per giorno la settimana 1 del piano per il corso genitori-adolescenti: 13-19 aprile, la settimana del contatto. Cosa faccio ogni mattina?')">
+    <div class="plan-num pn-s1">S1</div>
+    <div class="plan-info">
+      <div class="plan-title">La settimana del contatto</div>
+      <div class="plan-date">13–19 apr · email, telefonate, bandi</div>
+    </div>
+    <div class="plan-arrow">↗</div>
+  </div>
+
+  <div class="plan-item card-tap" onclick="askClaude('Dettagliami la settimana 2: 20-27 aprile, le fondamenta. ETS o partnership, one-pager, pagina pre-iscrizioni. Cosa faccio ogni giorno?')">
+    <div class="plan-num pn-s2">S2</div>
+    <div class="plan-info">
+      <div class="plan-title">Le fondamenta</div>
+      <div class="plan-date">20–27 apr · ETS, one-pager, pre-iscrizioni</div>
+    </div>
+    <div class="plan-arrow">↗</div>
+  </div>
+
+  <div class="plan-item card-tap" onclick="askClaude('Dettagliami la settimana 3: 28 aprile - 4 maggio, le relazioni istituzionali. Incontri con Adolescere, ACLI, CSV, scuole. Come mi preparo?')">
+    <div class="plan-num pn-s3">S3</div>
+    <div class="plan-info">
+      <div class="plan-title">Le relazioni istituzionali</div>
+      <div class="plan-date">28 apr–4 mag · incontri, CSV, scuole</div>
+    </div>
+    <div class="plan-arrow">↗</div>
+  </div>
+
+  <div class="plan-item card-tap" onclick="askClaude('Dettagliami le settimane 4 e 5: il pilota e il bando. Come organizzo il primo ciclo gratuito di maggio e preparo la candidatura alla Fondazione Pavia?')">
+    <div class="plan-num pn-s4">S4</div>
+    <div class="plan-info">
+      <div class="plan-title">Il pilota e il bando</div>
+      <div class="plan-date">5 mag–6 giu · primo ciclo + candidatura</div>
+    </div>
+    <div class="plan-arrow">↗</div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Domande strategiche</div>
+
+  <button class="qbtn" onclick="askClaude('Devo aprire una APS o trovare un ETS già esistente a Pavia come capofila per presentare il bando Fondazione Pavia? Pro e contro di ogni opzione.')">APS o ETS partner? Pro e contro ↗</button>
+  <button class="qbtn" onclick="askClaude('Scrivimi il one-pager del corso genitori-adolescenti da portare agli incontri istituzionali a Pavia. Una pagina, professionale, convincente.')">Scrivimi il one-pager ↗</button>
+  <button class="qbtn" onclick="askClaude('Aiutami a costruire il budget per un progetto corso genitori da presentare alla Fondazione della Comunità di Pavia. Cosa si può rendicontare?')">Aiutami col budget ↗</button>
+  <button class="qbtn" style="margin-bottom:0" onclick="askClaude('Come presento me stesso e il corso genitori-adolescenti a un finanziatore istituzionale a Pavia in 3 minuti? Elevator pitch.')">Elevator pitch 3 minuti ↗</button>
+
+</div>
+
+<!-- ═══ CONTATTI ═══ -->
+<div class="content" id="screen-contatti">
+
+  <div class="section-label" style="margin-top:16px">Partner e finanziatori</div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div class="row-center" style="margin-bottom:12px">
+      <div class="contact-avatar av-teal">FA</div>
+      <div style="flex:1">
+        <div class="contact-name">Fondazione Adolescere</div>
+        <div class="contact-role">Partner operativo · Voghera (PV)</div>
+      </div>
+      <span class="prio-badge pb-alta">Alta</span>
+    </div>
+    <div class="info-row"><span class="info-label">Referente</span><span class="info-val">Dott.ssa B. Lombardini</span></div>
+    <div class="info-row"><span class="info-label">Email</span><span class="info-val"><a href="mailto:cpf@adolescere.org">cpf@adolescere.org</a></span></div>
+    <div class="info-row"><span class="info-label">Tel.</span><span class="info-val"><a href="tel:3311753962">331 175 3962</a></span></div>
+    <div class="info-row"><span class="info-label">Azione</span><span class="info-val" style="color:var(--amber)">Email entro lun 14</span></div>
+    <button class="btn-ask" style="margin-top:12px" onclick="askClaude('Prepara i punti chiave per il primo contatto con Fondazione Adolescere di Voghera. Cosa devo dire, cosa devo evitare, qual è il mio vantaggio competitivo?')">Prepara il contatto ↗</button>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div class="row-center" style="margin-bottom:12px">
+      <div class="contact-avatar av-blue">AC</div>
+      <div style="flex:1">
+        <div class="contact-name">ACLI Pavia</div>
+        <div class="contact-role">Partner con rete Cariplo</div>
+      </div>
+      <span class="prio-badge pb-alta">Alta</span>
+    </div>
+    <div class="info-row"><span class="info-label">Email</span><span class="info-val"><a href="mailto:sociale@acli.it">sociale@acli.it</a></span></div>
+    <div class="info-row"><span class="info-label">Tel.</span><span class="info-val"><a href="tel:038229638">0382/29638</a></span></div>
+    <div class="info-row"><span class="info-label">Orari</span><span class="info-val">Lun–ven mattina</span></div>
+    <div class="info-row"><span class="info-label">Azione</span><span class="info-val" style="color:var(--amber)">Chiama lun 14 mattina</span></div>
+    <button class="btn-ask" style="margin-top:12px" onclick="askClaude('Copione completo per la telefonata ad ACLI Pavia per proporre la partnership sul corso genitori-adolescenti. Tono diretto e concreto.')">Copione chiamata ↗</button>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div class="row-center" style="margin-bottom:12px">
+      <div class="contact-avatar av-red">FP</div>
+      <div style="flex:1">
+        <div class="contact-name">Fond. Comunità Pavia</div>
+        <div class="contact-role">Finanziatore · bandi 2026 aperti</div>
+      </div>
+      <span class="prio-badge pb-media">Media</span>
+    </div>
+    <div class="info-row"><span class="info-label">Sito</span><span class="info-val"><a href="https://www.fondazionepv.it/bandi">fondazionepv.it/bandi</a></span></div>
+    <div class="info-row"><span class="info-label">Tel.</span><span class="info-val"><a href="tel:0382538795">0382/538795</a></span></div>
+    <div class="info-row"><span class="info-label">Budget</span><span class="info-val">Fino a €24.000</span></div>
+    <button class="btn-ask" style="margin-top:12px" onclick="askClaude('Come mi preparo per il colloquio orientativo con la Fondazione della Comunità della Provincia di Pavia? Cosa vogliono sentirsi dire?')">Prepara il colloquio ↗</button>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div class="row-center" style="margin-bottom:12px">
+      <div class="contact-avatar av-amber">CS</div>
+      <div style="flex:1">
+        <div class="contact-name">Consorzio Sociale Pavese</div>
+        <div class="contact-role">Accesso diretto · senza bando</div>
+      </div>
+      <span class="prio-badge pb-media">Media</span>
+    </div>
+    <div class="info-row"><span class="info-label">Indirizzo</span><span class="info-val">P.le Crosione 10/B</span></div>
+    <div class="info-row"><span class="info-label">Tel.</span><span class="info-val"><a href="tel:3397151351">339 715 1351</a></span></div>
+    <div class="info-row"><span class="info-label">Sportello</span><span class="info-val">Mer 10–13 e 16–18</span></div>
+    <button class="btn-ask" style="margin-top:12px" onclick="askClaude('Come propongo il corso gratuito genitori al Consorzio Sociale Pavese senza aspettare un bando? Cosa gli offro in cambio?')">Come propormi ↗</button>
+  </div>
+
+</div>
+
+<!-- ═══ DIARIO ═══ -->
+<div class="content" id="screen-diario">
+
+  <div class="install-banner" style="margin-top:16px">
+    <div class="install-title">Installa sul tuo iPhone</div>
+    <div class="install-steps">
+      1. Apri questa pagina in <b>Safari</b><br>
+      2. Tocca <b>Condividi</b> (icona in basso)<br>
+      3. Scegli <b>"Aggiungi a schermata Home"</b><br>
+      4. Conferma — appare l'icona "Corso PV"
+    </div>
+  </div>
+
+  <div class="claude-strip">
+    <div class="claude-label">Claude · aggiornamento rapido</div>
+    <button class="qbtn" onclick="askClaude('Aggiornamento progetto corso genitori Pavia: fammi un briefing in 3 domande brevi per capire a che punto sono e cosa fare dopo.')">Fammi un briefing rapido ↗</button>
+    <button class="qbtn" style="margin-bottom:0" onclick="askClaude('Ho appena avuto un contatto o un incontro per il corso genitori a Pavia. Aiutami ad analizzare cosa è emerso e definire i prossimi passi.')">Ho appena incontrato qualcuno ↗</button>
+  </div>
+
+  <div class="section-label">Registro attività</div>
+
+  <div id="log-list">
+    <div class="log-entry">
+      <div class="log-dot log-teal"></div>
+      <div class="log-body">
+        <div class="log-date">dom 13 apr · avvio</div>
+        <div class="log-text">Piano operativo definito. Prima settimana: email Adolescere, chiamata ACLI, lettura bandi Fondazione Pavia, contatto Consorzio Sociale.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Aggiungi nota</div>
+
+  <textarea class="note-area" id="note-txt" placeholder="Cosa è successo? Una risposta, un incontro, una decisione..."></textarea>
+  <div class="note-btns">
+    <button class="btn-outline" style="flex:1" onclick="saveNote()">Salva</button>
+    <button class="btn-primary" style="flex:1" onclick="sendNoteToC()">Invia a Claude ↗</button>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav">
+  <div class="bnav-item active" id="nav-oggi" onclick="switchTab('oggi')">
+    <div class="bnav-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <div class="bnav-label">Oggi</div>
+  </div>
+  <div class="bnav-item" id="nav-piano" onclick="switchTab('piano')">
+    <div class="bnav-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+    </div>
+    <div class="bnav-label">Piano</div>
+  </div>
+  <div class="bnav-item" id="nav-contatti" onclick="switchTab('contatti')">
+    <div class="bnav-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </div>
+    <div class="bnav-label">Contatti</div>
+  </div>
+  <div class="bnav-item" id="nav-diario" onclick="switchTab('diario')">
+    <div class="bnav-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+      </svg>
+    </div>
+    <div class="bnav-label">Diario</div>
+  </div>
+</div>
+
+<script>
+const CLAUDE_URL = 'https://claude.ai/new';
+
+function askClaude(prompt) {
+  const encoded = encodeURIComponent(prompt);
+  window.open(CLAUDE_URL + '?q=' + encoded, '_blank');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.content').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function toggleExp(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+const done = {};
+function tick(tid, cid, lid) {
+  done[tid] = !done[tid];
+  const c = document.getElementById(cid);
+  const l = document.getElementById(lid);
+  c.classList.toggle('done', done[tid]);
+  if (l) l.classList.toggle('done', done[tid]);
+  updateProg();
+}
+
+function updateProg() {
+  const ids = ['t1','t2','t3','t4'];
+  const n = ids.filter(i => done[i]).length;
+  const pct = Math.round(n / ids.length * 100);
+  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('s-done').textContent = n;
+  document.getElementById('s-pct').textContent = pct + '%';
+}
+
+function saveNote() {
+  const txt = document.getElementById('note-txt').value.trim();
+  if (!txt) return;
+  const now = new Date();
+  const d = ['dom','lun','mar','mer','gio','ven','sab'][now.getDay()];
+  const dateStr = d + ' ' + now.getDate() + ' apr · ' +
+    now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = '<div class="log-dot log-amber"></div><div class="log-body"><div class="log-date">' + dateStr + '</div><div class="log-text">' + txt + '</div></div>';
+  document.getElementById('log-list').prepend(el);
+  document.getElementById('note-txt').value = '';
+}
+
+function sendNoteToC() {
+  const txt = document.getElementById('note-txt').value.trim();
+  const prompt = txt
+    ? 'Aggiornamento progetto corso genitori-adolescenti a Pavia: ' + txt + '. Cosa suggerisci come passo successivo concreto?'
+    : 'Sono Agostino, sto seguendo il piano per il corso genitori-adolescenti a Pavia. Dimmi il passo più importante da fare adesso.';
+  if (txt) saveNote();
+  askClaude(prompt);
+}
+
+function tick_clock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.getHours() + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+tick_clock();
+setInterval(tick_clock, 30000);
+</script>
+</body>
+</html>
